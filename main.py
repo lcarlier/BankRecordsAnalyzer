@@ -111,11 +111,12 @@ class RecordFilter(QSortFilterProxyModel):
         self.filterHeader = filterHeader
 
     def filterAcceptsRow(self, source_row, source_parent):
+        sourceModel = self.sourceModel()
         if not self.filterHeader:
             return False
         for i in range(BankRecord.getMaxIdx()):
-            idx = self.sourceModel().index(source_row, i, source_parent)
-            if not self.sourceModel().data(idx, Qt.DisplayRole).toString().contains(self.filterHeader.filterText(i), QtCore.Qt.CaseInsensitive):
+            idx = sourceModel.index(source_row, i, source_parent)
+            if not sourceModel.data(idx, Qt.DisplayRole).toString().contains(self.filterHeader.filterText(i), QtCore.Qt.CaseInsensitive):
                 return False
         return True
 
@@ -173,10 +174,14 @@ class App(QMainWindow, Ui_MainWindow):
         fileNames = QFileDialog.getOpenFileNames(self, "Open Images", '',
                 fileFilter)
         if fileNames:
+            #print fileNames
             parserRecords = parser.parseRecords(fileNames)
+            #print "parserRecords: %s"%(parserRecords)
+            #print "self.currentRecords: %s"%(self.currentRecords)
             for curRec in parserRecords:
                 if curRec not in self.currentRecords:
                     self.currentRecords += [curRec]
+            #print "after self.currentRecords: %s"%(self.currentRecords)
             self.currentRecords.sort(reverse=True)
             #print self.currentRecords
             self.tableView.resizeRowsToContents()

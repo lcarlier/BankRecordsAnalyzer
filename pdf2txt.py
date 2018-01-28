@@ -14,6 +14,7 @@ from pdfminer.image import ImageWriter
 # main
 class Pdf2txt():
     def __init__(self, filenameList):
+        debug = 0
         pagenos = set()
         maxpages = 0
         password = ""
@@ -23,10 +24,10 @@ class Pdf2txt():
         imagewriter = None
         rotation = 0
         #
-        #PDFDocument.debug = debug
-        #PDFParser.debug = debug
-        #CMapDB.debug = debug
-        #PDFPageInterpreter.debug = debug
+        PDFDocument.debug = debug
+        PDFParser.debug = debug
+        CMapDB.debug = debug
+        PDFPageInterpreter.debug = debug
         #
         rsrcmgr = PDFResourceManager(caching=caching)
 
@@ -35,6 +36,7 @@ class Pdf2txt():
         device = TextConverter(rsrcmgr, self.outfp, codec=codec, laparams=laparams,
                                imagewriter=imagewriter)
         for fname in filenameList:
+            #print fname
             fp = open(fname, 'rb')
             interpreter = PDFPageInterpreter(rsrcmgr, device)
             for page in PDFPage.get_pages(fp, pagenos,
