@@ -1,10 +1,11 @@
-#! /usr/bin/python
+#! /usr/bin/env python3
 import sys
 from BankRecord import BankRecord
 from BelfiusParser import BelfiusParser
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4 import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5 import *
 
 import faulthandler
 faulthandler.enable()
@@ -36,15 +37,15 @@ class MyTableModel(QAbstractTableModel):
             return QVariant()
         return QVariant(BankRecord.getIdxHeaderData(section))
 
-class FilterHeader(QtGui.QHeaderView):
+class FilterHeader(QHeaderView):
     filterActivated = QtCore.pyqtSignal()
 
     def __init__(self, count, parent):
-        super(QtGui.QHeaderView, self).__init__(QtCore.Qt.Horizontal, parent)
+        super(QHeaderView, self).__init__(QtCore.Qt.Horizontal, parent)
         self._editors = []
         self._padding = 4
         self.setStretchLastSection(True)
-        self.setResizeMode(QtGui.QHeaderView.Interactive)
+        self.setSectionResizeMode(QHeaderView.Interactive)
         self.setDefaultAlignment(
             QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.setSortIndicatorShown(False)
@@ -58,14 +59,14 @@ class FilterHeader(QtGui.QHeaderView):
             editor = self._editors.pop()
             editor.deleteLater()
         for index in range(count):
-            editor = QtGui.QLineEdit(self.parent())
+            editor = QLineEdit(self.parent())
             editor.setPlaceholderText('Filter')
             editor.textChanged.connect(self.filterActivated.emit)
             self._editors.append(editor)
         self.adjustPositions()
 
     def sizeHint(self):
-        size = super(QtGui.QHeaderView, self).sizeHint()
+        size = super(QHeaderView, self).sizeHint()
         if self._editors:
             height = self._editors[0].sizeHint().height()
             #size.setHeight(size.height() + height + self._padding)
@@ -78,7 +79,7 @@ class FilterHeader(QtGui.QHeaderView):
             self.setViewportMargins(0, 0, 0, height + self._padding)
         else:
             self.setViewportMargins(0, 0, 0, 0)
-        super(QtGui.QHeaderView, self).updateGeometries()
+        super(QHeaderView, self).updateGeometries()
         self.adjustPositions()
 
     def adjustPositions(self):
@@ -116,8 +117,13 @@ class RecordFilter(QSortFilterProxyModel):
             return False
         for i in range(BankRecord.getMaxIdx()):
             idx = sourceModel.index(source_row, i, source_parent)
-            if not sourceModel.data(idx, Qt.DisplayRole).toString().contains(self.filterHeader.filterText(i), QtCore.Qt.CaseInsensitive):
+            dataString = sourceModel.data(idx, Qt.DisplayRole).value().lower()
+            filterText = self.filterHeader.filterText(i).lower()
+            #print("'%s' '%s'"%(dataString, filterText))
+            if len(filterText) > 0 and not dataString.find(filterText) >= 0:
+                #print("FALSE")
                 return False
+        #print("TRUE")
         return True
 
 class App(QMainWindow, Ui_MainWindow):
@@ -171,10 +177,10 @@ class App(QMainWindow, Ui_MainWindow):
     def openFileWithParser(self, parser):
         dlg = QFileDialog()
         fileFilter = parser.getFileTypeToOpen()
-        fileNames = QFileDialog.getOpenFileNames(self, "Open Images", '',
+        fileNames, _ = QFileDialog.getOpenFileNames(self, "Open Images", '',
                 fileFilter)
         if fileNames:
-            #print fileNames
+            #print(fileNames)
             parserRecords = parser.parseRecords(fileNames)
             #print "parserRecords: %s"%(parserRecords)
             #print "self.currentRecords: %s"%(self.currentRecords)
@@ -183,7 +189,7 @@ class App(QMainWindow, Ui_MainWindow):
                     self.currentRecords += [curRec]
             #print "after self.currentRecords: %s"%(self.currentRecords)
             self.currentRecords.sort(reverse=True)
-            #print self.currentRecords
+            #print(self.currentRecords)
             self.tableView.resizeRowsToContents()
             self.tableModel.layoutChanged.emit()
 

@@ -1,6 +1,6 @@
 import sys
 import io
-import StringIO
+#import StringIO
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
@@ -31,12 +31,12 @@ class Pdf2txt():
         #
         rsrcmgr = PDFResourceManager(caching=caching)
 
-        self.outfp = StringIO.StringIO()
+        self.outfp = io.StringIO()
 
         device = TextConverter(rsrcmgr, self.outfp, codec=codec, laparams=laparams,
                                imagewriter=imagewriter)
         for fname in filenameList:
-            #print fname
+            #print(fname)
             fp = open(fname, 'rb')
             interpreter = PDFPageInterpreter(rsrcmgr, device)
             for page in PDFPage.get_pages(fp, pagenos,
