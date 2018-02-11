@@ -6,6 +6,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import *
+import datetime
 
 import faulthandler
 faulthandler.enable()
@@ -41,7 +42,7 @@ class FilterHeader(QHeaderView):
     filterActivated = QtCore.pyqtSignal()
 
     def __init__(self, count, parent):
-        super(QHeaderView, self).__init__(QtCore.Qt.Horizontal, parent)
+        super(FilterHeader, self).__init__(QtCore.Qt.Horizontal, parent)
         self._editors = []
         self._padding = 4
         self.setStretchLastSection(True)
@@ -66,7 +67,7 @@ class FilterHeader(QHeaderView):
         self.adjustPositions()
 
     def sizeHint(self):
-        size = super(QHeaderView, self).sizeHint()
+        size = super(FilterHeader, self).sizeHint()
         if self._editors:
             height = self._editors[0].sizeHint().height()
             #size.setHeight(size.height() + height + self._padding)
@@ -79,7 +80,7 @@ class FilterHeader(QHeaderView):
             self.setViewportMargins(0, 0, 0, height + self._padding)
         else:
             self.setViewportMargins(0, 0, 0, 0)
-        super(QHeaderView, self).updateGeometries()
+        super(FilterHeader, self).updateGeometries()
         self.adjustPositions()
 
     def adjustPositions(self):
@@ -105,7 +106,7 @@ class FilterHeader(QHeaderView):
 
 class RecordFilter(QSortFilterProxyModel):
     def __init__(self, parent):
-        super(QSortFilterProxyModel,self).__init__(parent)
+        super(RecordFilter,self).__init__(parent)
         self.filterHeader = None
 
     def setFilterHeader(self, filterHeader):
@@ -114,29 +115,28 @@ class RecordFilter(QSortFilterProxyModel):
     def filterAcceptsRow(self, source_row, source_parent):
         sourceModel = self.sourceModel()
         if not self.filterHeader:
-            return False
+            return True
         for i in range(BankRecord.getMaxIdx()):
             idx = sourceModel.index(source_row, i, source_parent)
+            if not idx.isValid():
+                return False
             dataString = sourceModel.data(idx, Qt.DisplayRole).value().lower()
             filterText = self.filterHeader.filterText(i).lower()
-            #print("'%s' '%s'"%(dataString, filterText))
             if len(filterText) > 0 and not dataString.find(filterText) >= 0:
-                #print("FALSE")
                 return False
-        #print("TRUE")
         return True
 
 class App(QMainWindow, Ui_MainWindow):
 
     def __init__(self):
-        super(QMainWindow, self).__init__()
-        super(Ui_MainWindow, self).__init__()
+        super(App, self).__init__()
         self.title = 'Bank Record Analyzer'
         self.left = 10
         self.top = 10
         self.width = 800
         self.height = 600
-        self.currentRecords = []
+        #self.currentRecords = []
+        self.currentRecords = [BankRecord("bankName", 0, "accountNr", datetime.datetime.now(), "3", "comment")]
 
         self.initUI()
 
