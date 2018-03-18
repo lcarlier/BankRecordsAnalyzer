@@ -14,8 +14,8 @@ faulthandler.enable()
 from mainWindow import Ui_MainWindow
 
 class MyTableModel(QAbstractTableModel):
-    def __init__(self, datain, parent=None, *args):
-        QAbstractTableModel.__init__(self, parent, *args)
+    def __init__(self, datain, parent=None):
+        super(MyTableModel, self).__init__(parent)
         self.arraydata = datain
 
     def rowCount(self, parent):
@@ -28,6 +28,8 @@ class MyTableModel(QAbstractTableModel):
         if not index.isValid():
             return QVariant()
         elif role != Qt.DisplayRole:
+            return QVariant()
+        elif index.row() >= len(self.arraydata) or index.row() < 0:
             return QVariant()
         return QVariant(self.arraydata[index.row()].getIdxData(index.column()))
 
@@ -135,8 +137,7 @@ class App(QMainWindow, Ui_MainWindow):
         self.top = 10
         self.width = 800
         self.height = 600
-        #self.currentRecords = []
-        self.currentRecords = [BankRecord("bankName", 0, "accountNr", datetime.datetime.now(), "3", "comment")]
+        self.currentRecords = []
 
         self.initUI()
 
@@ -145,7 +146,7 @@ class App(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-        self.tableModel = MyTableModel(self.currentRecords, self)
+        self.tableModel = MyTableModel(self.currentRecords, self.tableView)
         self.proxy = RecordFilter(self)
         self.proxy.setSourceModel(self.tableModel)
         self.tableView.setModel(self.proxy)
@@ -168,7 +169,7 @@ class App(QMainWindow, Ui_MainWindow):
         self.customHeader.filterActivated.connect(self.handleFilterActivated)
 
     def handleFilterActivated(self):
-        self.tableModel.layoutChanged.emit()
+        self.proxy.invalidateFilter()
 
     def openBelfiusFile(self):
         parser = BelfiusParser()
